@@ -1,0 +1,207 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Models\Links;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+
+class LinksController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index($userId)
+    {
+        
+        return view('admin/links.index',compact('userId'));
+    }
+
+    /**
+     * Get the data for listing in yajra.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function getLinks( Links $links, $userId)
+    {   
+        $data   = $links->getData($userId);
+
+        return \DataTables::of($data)
+            ->addColumn('Actions', function($data) {
+                return '<button type="button" class="btn btn-primary btn-sm" id="getEditLinkData" data-id="'.$data->id.'"><i class="fas fa-edit"></i></button>
+                        <button type="button" data-id="'.$data->id.'" data-toggle="modal" data-target="#DeleteLinkModal" class="btn btn-danger btn-sm" id="getDeleteId"><i class="fas fa-trash-alt"></i></button>';
+            })
+            ->rawColumns(['Actions'])
+            
+            ->addColumn('generated_link', function($data) 
+            { 
+                return $_SERVER['HTTP_HOST'].'/' . $data->generated_link;
+            })
+            ->make(true);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request, $id)
+    {   
+        $request->validate([
+            'primary_link' => 'required|url',
+            'generated_link' => 'required|alpha_dash|unique:links',
+        ]);
+
+        Links::create([
+            'primary_link'      => $request['primary_link'],
+            'generated_link'    => $request['generated_link'],
+            'user_id'           => $id,
+        ]);
+        
+        return redirect()->route('links.index',$id)
+            ->with('success','URL created successfully.');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($userId, Links $link)
+    {   
+        return view('admin.links.edit',compact('link','userId'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Links  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $userId, Links $link )
+    {   
+        $request->validate([
+            'primary_link' => 'required|url',
+            'generated_link' => 'required|alpha_dash|unique:links,id,'. $link->id,
+        ]);
+        
+        $link->update([
+            'primary_link'      => $request['primary_link'],
+            'generated_link'    => $request['generated_link'],
+        ]);
+
+        return redirect()->route('links.index', $userId)
+            ->with('success','URL updated successfully');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy( $userId,$id )
+    {   
+        Links::find($id)->delete();
+
+        return response()->json(['success' => 'URL deleted successfully']);
+    }
+
+     /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create($userId)
+    {
+        return view('admin.links.create', compact('userId'));
+    }
+
+     /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function forwarding($url)
+    {
+        $link = Links::limit(1)->where('generated_link', '=', $url)->get();
+        
+        if(!isset($link[0]))
+        {
+            return redirect('/');
+        }
+
+        $link[0]->update([
+            'count' => $link[0]->count + 1,
+        ]);
+
+        return redirect($link[0]->primary_link);
+    }
+
+
+     /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function generateLink()
+    {
+        do 
+        {
+            $random = substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-'), 0, 16);
+            $link   = Links::limit(1)->where('generated_link', '=', $random)->get();
+        } 
+        while (isset($link[0]));
+
+        return $random;
+    }
+
+    /**
+    * Show the form for creating a new resource.
+    *
+    * @return \Illuminate\Http\Response
+    */
+    public function verifyLink(Request $request)
+    {
+        $link   = Links::limit(1)->where('generated_link', '=', $request->generated_link)->get();
+
+        if(isset($link[0]))
+        {
+            return 'err';
+        }
+        else
+        {
+            return 'ok';
+        }   
+    }
+    
+
+     /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function forwardingApi($url)
+    {
+        $link = Links::limit(1)->where('generated_link', '=', $url)->get();
+        
+        if(!isset($link[0]))
+        {
+            dd('home page');;
+        }
+
+        $link[0]->update([
+            'count' => $link[0]->count + 1,
+        ]);
+
+        return redirect($link[0]->primary_link);
+    }
+}
