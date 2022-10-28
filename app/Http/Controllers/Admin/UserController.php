@@ -38,9 +38,10 @@ class UserController extends Controller
             })
             ->rawColumns(['Actions'])
             
-            ->addColumn('Created', function($data) 
+            ->addColumn('TotalURL', function($data) 
             { 
-                return $data->created_at;
+                $count = Links::where('user_id','=', $data->id)->count();
+                return $count;
             })
             
             ->addColumn('Roles', function($data) 

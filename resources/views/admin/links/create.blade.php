@@ -80,22 +80,24 @@
             },
             success: function(result) 
             {   
-                // alert(result);
                 var div = document.getElementById("generated_link");
                 if(result == 'err')
                 {
+                    var parentDiv = div.parentNode;
                     div.classList.add("is-invalid");
-                    // var container = document.createElement('div')
-                    // container.innerHTML = '<div class="invalid-feedback" bis_skin_checked="1">\
-                    //     <strong>The generated link has already been taken.</strong>\
-                    //     </div>';
-                    // div.insertBefore(container, div.firstChild);
+                    var container = document.createElement('div');
+                    container.classList.add("invalid-feedback");
+                    container.setAttribute('id', 'link_exist');
+                    container.innerHTML = '<strong>The generated link has already been taken.</strong>';
+                    div.parentNode.insertBefore(container, div.nextSibling);
                 }
                 
                 if(result == 'ok')
                 {
                     div.classList.remove("is-invalid");
-                }               
+                    var my_err = document.getElementById("link_exist");
+                    my_err.remove();
+                }                   
             }
         });
     };    

@@ -22,7 +22,7 @@
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Roles</th>
-                                    <th>Created</th>
+                                    <th>Total URL</th>
                                     <th width="150" class="text-center">Action</th>
                                 </tr>
                             </thead>
@@ -76,7 +76,7 @@
                 {data: 'name', name: 'name'},
                 {data: 'email', name: 'email'},
                 {data: 'Roles', name: 'Roles'},
-                {data: 'Created', name: 'Created'},
+                {data: 'TotalURL', name: 'Total URL'},
                 {data: 'Actions', name: 'Actions',orderable:false,serachable:false,sClass:'text-center'},
             ]
         });
